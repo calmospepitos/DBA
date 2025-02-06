@@ -1,0 +1,12 @@
+ERROR 2020-01-08 17:03:47 [com.objectif8.libraries.common.network.MessageSocket]: java.io.StreamCorruptedException: invalid type code: AC
+java.io.ObjectInputStream.readObject0(Unknown Source)
+java.io.ObjectInputStream.defaultReadFields(Unknown Source)
+java.io.ObjectInputStream.readSerialData(Unknown Source)
+java.io.ObjectInputStream.readOrdinaryObject(Unknown Source)
+java.io.ObjectInputStream.readObject0(Unknown Source)
+java.io.ObjectInputStream.readObject(Unknown Source)
+com.objectif8.libraries.common.network.MessageSocket.readMsg(MessageSocket.java:295)
+com.objectif8.libraries.common.network.MessageSocket.readMessage(MessageSocket.java:276)
+com.objectif8.libraries.common.network.SocketListener.run(MessageSocket.java:380)
+java.lang.Thread.run(Unknown Source)
+
