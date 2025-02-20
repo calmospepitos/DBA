@@ -19,8 +19,24 @@ public class GameLogDAO {
 	 */
 	public static boolean save(GameLog gameLog) {
 		boolean success = false;
-				
+		Connection connection = DBConnection.getConnection();
+		PreparedStatement statement;
+		String player_name = gameLog.getPlayerName();
+		int score = gameLog.getScore();
+
+		try {
+			statement = connection.prepareStatement("INSERT INTO game_logs(player_name, score) VALUES (?, ?)");
+			statement.setString(1, player_name);
+			statement.setInt(2, score);
+			statement.execute();
+			statement.close();
+			success = true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 		return success;
+
 	}
 	
 	/**
@@ -33,6 +49,24 @@ public class GameLogDAO {
 		List<GameLog> scoreList = new ArrayList<GameLog>();
 				
 		Connection connection = DBConnection.getConnection();
+
+		int combien = limit;
+
+		try {
+			PreparedStatement statement = connection.prepareStatement(
+					"SELECT * FROM game_logs ORDER BY score DESC LIMIT 0, ? ");
+			statement.setInt(1, combien);
+			ResultSet result = statement.executeQuery();
+
+			while(result.next()) {
+				scoreList.add(new GameLog(result.getString("player_name"), result.getInt("score")));
+			}
+
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 
 		return scoreList;
 	}

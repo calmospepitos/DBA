@@ -1,4 +1,4 @@
-package ca.qc.cvm.dba.jumper.dao;
+package ca.qc.cvm.dba.memos.dao;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -9,19 +9,20 @@ public class DBConnection {
 	private static Connection connection;
 	
 	/**
-	 * M�thode qui permet de retourner une connexion � la base de donn�es MySQL
+	 * Méthode qui permet de retourner une connexion à la base de données MySQL
 	 * 
 	 * @return
 	 */
 	public static Connection getConnection() {
 		if (connection == null) {
 			MysqlXADataSource dataSource = new MysqlXADataSource();
-			dataSource.setUser("jumper_user");
+			dataSource.setUser("memos_user");
 			dataSource.setPassword("AAAaaa111");
 			dataSource.setServerName("localhost");
-			dataSource.setDatabaseName("jumper_db");
+			dataSource.setDatabaseName("memos_db");
 			
 			try {
+				dataSource.setUseSSL(false);
 				connection = dataSource.getConnection();
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -32,7 +33,7 @@ public class DBConnection {
 	}
 	
 	/**
-	 * M�thode permettant de tester la connexion
+	 * Méthode permettant de tester la connexion
 	 * 
 	 * @return si la connexion est ouverte ou pas
 	 */

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/app/MngApplication.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/dao/CategoryDAO.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/dao/DBConnection.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/dao/UserDAO.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/view/CommonPanel.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/view/FrameMain.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/view/PanelCategories.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/view/PanelLogin.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/view/PanelMemos.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/view/PanelMenu.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/ca/qc/cvm/dba/memos/view/PanelRegister.java" charset="UTF-8" />
+    <file url="PROJECT" charset="windows-1252" />
+  </component>
+</project>
