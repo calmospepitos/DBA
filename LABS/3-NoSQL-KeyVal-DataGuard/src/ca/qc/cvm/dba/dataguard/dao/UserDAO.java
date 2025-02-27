@@ -1,7 +1,7 @@
 package ca.qc.cvm.dba.dataguard.dao;
 
 public class UserDAO {
-	private static final String password = "AAAaaa111";
+	private static final String password = "1234";
 
 	/**
 	 * Méthode vérifier si l'usager a spécifié le bon mot de passe
