@@ -1,0 +1,28 @@
+A PROPOS DE MAGIX
+-------------------
+Créateur et développeur : Frédéric Thériault
+
+
+Contributions
+------------------
+- Image de fond (splash) : https://wall.alphacoders.com/by_sub_category.php?id=167162
+- Image de fond (choix de cartes) : http://www.wallpapersonweb.com/image-106502.html
+- Image de fond (jeu) : http://wallpaperhd4k.com/dark-forest-fantasy-wallpaper-2/
+- Logo du jeu : http://textcraft.net
+- Bouton : http://opengameart.org/content/ui-button
+- Icône du jeu : http://findicons.com/icon/557710/evil
+- Coeur : http://services.runescape.com/m=rswiki/en/Food
+- Coin : http://bdcraft.net/forum/wip-128x-xenos-reliquary
+- Frame de carte : http://design.tutsplus.com/tutorials/create-a-modern-fantasy-card-design-for-eminence-xanders-tales-in-illustrator--cms-21727
+- Spell - Swift : http://sparkblog.emc.com/tag/speed-of-light/
+- Spell - Heal : http://www.nexusmods.com/skyrim/mods/14013/?
+- Spell - Motivate : www.ravensnpennies.com/2014/04/gurps101-spell-kits-for-casters.html
+- Spell - Focus : http://tamrielvault.com/group/character-building/forum/topics/character-build-azra-nightwielder
+- Spell - Reflect : http://anime.astronerdboy.com/2015/05/fatestay-night-unlimited-blade-works-17.html
+- Spell - Protect : http://conorburke.tumblr.com/post/127936049994/spell-reflection-30minute-speedpainting
+- Carte - Knight : http://digital-art-gallery.com/picture/gallery/warrior/12/RATING/DESC/16
+- Carte - Dragon : http://seraphina.wikia.com/wiki/Dragon
+- Carte - Giant : http://the-legendary-moonlight-sculptor.wikia.com/wiki/Giant,_Moutain?file=Giant_warrior.jpg
+- Carte - Wolf : cardList.add(new Giant());
+- Carte - Hunter : http://www.playbuzz.com/ridaakata10/what-kind-of-warrior-are-you
+- Carte - WereWolf : http://6iee.com/506016.html
