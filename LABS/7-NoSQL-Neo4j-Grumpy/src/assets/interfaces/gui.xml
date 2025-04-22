@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nifty>
+	<useStyles filename="nifty-default-styles.xml" />
+	<useControls filename="nifty-default-controls.xml" />
+	
+	<screen id="main" controller="ca.qc.cvm.dba.grumpy.Controller">
+		<layer id="foreground" childLayout="absolute" visibleToMouse="true">
+			<panel id="login" height="110px" width="200px" x="250px" y="0px" align="center" valign="center" backgroundColor="#0000" childLayout="absolute" visibleToMouse="true">				
+				<effect>
+					<onStartScreen name="move" mode="in" direction="top" length="400" startDelay="0" inherit="true"/>
+					<onEndScreen name="move" mode="out" direction="top" length="300" startDelay="0" inherit="true"/>
+				</effect>
+				<control id="text" width="300px" height="20px" name="textfield" x="10px" y="400px"/>
+				
+				<control id="doneBtn"  label="Envoyer" width="100px" height="20px" name="button" x="110px" y="430px"  visibleToMouse="true">
+					<interact onClick="doneClicked()"/>
+				</control>
+				<control name="label" id="message" text="" height="30px" width="400px" x="0px" y="30px" textHAlign="left"/> 
+			</panel>
+			
+		</layer>
+	</screen>
+	
+</nifty>
+

@@ -119,6 +119,8 @@ public class UserDAO {
 	 */
 	public List<String> findAllUsers() {
 		List<String> result = new ArrayList<String>();
+
+		result = executerRequeteCypher("MATCH (n:Person) RETURN n.name ORDER BY n.name");
 		
 		return result;
 	}
@@ -131,6 +133,8 @@ public class UserDAO {
 	 */
 	public List<String> getDirectConnectionsOf(String user) {
 		List<String> result = new ArrayList<String>();
+
+		result = executerRequeteCypher("MATCH (n:Person)-[:KNOWS]->(m:Person) WHERE n.name = $p1 RETURN m.name ORDER BY m.name", user);
 		
 		return result;
 	}
@@ -142,6 +146,8 @@ public class UserDAO {
 	 */
 	public List<String> getPopularUsers() {
 		List<String> result = new ArrayList<String>();
+
+		result = executerRequeteCypher("MATCH (n:Person)-[:KNOWS]->(m:Person) WITH m, count(n) as c WHERE c > 1 RETURN m.name ORDER BY m.name");
 		
 		return result;
 	}
@@ -157,6 +163,8 @@ public class UserDAO {
 	 */
 	public List<String> proposeConnection(String user) {
 		List<String> result = new ArrayList<String>();
+
+		result = executerRequeteCypher("MATCH (n:Person)-[:KNOWS]->(m:Person)-[:KNOWS]->(o:Person), (n:Person)-[:KNOWS]->(p:Person)-[:KNOWS]->(o:Person) WHERE n.name = $p1 AND NOT (n)-[:KNOWS]->(o) RETURN DISTINCT o.name ORDER BY o.name", user);
 		
 		return result;
 	}
@@ -168,6 +176,7 @@ public class UserDAO {
 	 */
 	public List<String> checkUnconnected() {
 		List<String> result = new ArrayList<String>();
+		result = executerRequeteCypher("MATCH (n:Person) WHERE NOT (n)<-[:KNOWS]-() RETURN n.name ORDER BY n.name");
 		
 		return result;
 	}
@@ -179,6 +188,8 @@ public class UserDAO {
 	 */
 	public List<String> getOldest() {
 		List<String> result = new ArrayList<String>();
+
+		result = executerRequeteCypher("MATCH (n:Person) WHERE NOT (n)<-[:OLDER_THAN]-() RETURN DISTINCT n.name");
 		
 		return result;
 	}
