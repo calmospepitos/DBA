@@ -499,7 +499,70 @@ public class RecipeDAO {
 	 */
 	public static Recipe generateRandomRecipe() {
 		Recipe r = new Recipe();
-		
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			List<String> allIngredients = new ArrayList<>();
+			for (Document doc : collection.find()) {
+				List<Document> ingredients = doc.getList("ingredients", Document.class);
+				if (ingredients != null) {
+					for (Document ingDoc : ingredients) {
+						String ingredientName = ingDoc.getString("name");
+						if (!allIngredients.contains(ingredientName)) {
+							allIngredients.add(ingredientName);
+						}
+					}
+				}
+			}
+
+			List<String> mutableIngredients = new ArrayList<>(allIngredients);
+			Collections.shuffle(mutableIngredients);
+			List<Ingredient> randomIngredients = new ArrayList<>();
+			int ingredientCount = Math.min(3 + (int) (Math.random() * 5), allIngredients.size());
+			for (int i = 0; i < ingredientCount; i++) {
+				randomIngredients.add(new Ingredient("Une quantité", allIngredients.get(i)));
+			}
+			r.setIngredients(randomIngredients);
+
+			List<String> predefinedSteps = new ArrayList<>(List.of(
+					"Mélanger tous les ingrédients ensemble.",
+					"Cuire au four pendant 20 minutes.",
+					"Laissez refroidir avant de servir.",
+					"Bien mélanger et servir.",
+					"Cuire à feu moyen pendant 10 minutes."
+			));
+			Collections.shuffle(predefinedSteps);
+			r.setSteps(predefinedSteps.subList(0, 2 + (int) (Math.random() * 3)));
+
+			r.setPrepTime(5 + (int) (Math.random() * 30));
+			r.setCookTime(10 + (int) (Math.random() * 60));
+			r.setPortion(1 + (int) (Math.random() * 5));
+
+			Document randomRecipeDoc = collection.find().limit(1).first();
+			if (randomRecipeDoc != null) {
+				String photoKey = randomRecipeDoc.getString("photoKey");
+				if (photoKey != null) {
+					Database berkeleyDb = BerkeleyConnection.getConnection();
+					DatabaseEntry keyEntry = new DatabaseEntry(photoKey.getBytes(StandardCharsets.UTF_8));
+					DatabaseEntry valueEntry = new DatabaseEntry();
+
+					if (berkeleyDb.get(null, keyEntry, valueEntry, null) == com.sleepycat.je.OperationStatus.SUCCESS) {
+						r.setImageData(valueEntry.getData());
+					}
+				}
+			}
+
+			List<String> prefixes = List.of("Giblotte à", "Mélangé de", "Crastillon de");
+			String randomPrefix = prefixes.get((int) (Math.random() * prefixes.size()));
+			String randomIngredientName = randomIngredients.get(0).getName();
+			r.setName(randomPrefix + " " + randomIngredientName);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return r;
 	}
 	
@@ -524,6 +587,52 @@ public class RecipeDAO {
 	 */
 	public static String getProposedIngredient(String recipeId) {
 		String proposedIngredient = "--";
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			Document currentRecipeDoc = collection.find(Filters.eq("_id", new ObjectId(recipeId))).first();
+			if (currentRecipeDoc == null) {
+				return proposedIngredient;
+			}
+
+			List<Document> currentIngredientsDocs = currentRecipeDoc.getList("ingredients", Document.class);
+			List<String> currentIngredients = new ArrayList<>();
+			if (currentIngredientsDocs != null) {
+				for (Document ingDoc : currentIngredientsDocs) {
+					currentIngredients.add(ingDoc.getString("name"));
+				}
+			}
+
+			for (Document otherRecipeDoc : collection.find()) {
+				if (otherRecipeDoc.getObjectId("_id").equals(currentRecipeDoc.getObjectId("_id"))) {
+					continue;
+				}
+
+				List<Document> otherIngredientsDocs = otherRecipeDoc.getList("ingredients", Document.class);
+				List<String> otherIngredients = new ArrayList<>();
+				if (otherIngredientsDocs != null) {
+					for (Document ingDoc : otherIngredientsDocs) {
+						otherIngredients.add(ingDoc.getString("name"));
+					}
+				}
+
+				List<String> commonIngredients = new ArrayList<>(currentIngredients);
+				commonIngredients.retainAll(otherIngredients);
+
+				if (commonIngredients.size() >= 2) {
+					for (String ingredient : otherIngredients) {
+						if (!currentIngredients.contains(ingredient)) {
+							proposedIngredient = ingredient;
+							return proposedIngredient;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		return proposedIngredient;
 	}
