@@ -249,7 +249,29 @@ public class RecipeDAO {
 	 */
 	public static double getAverageNumberOfIngredients() {
 		double num = 0;
-		
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			long totalRecipes = collection.countDocuments();
+			if (totalRecipes == 0) {
+				return 0;
+			}
+
+			long totalIngredients = 0;
+			for (Document doc : collection.find()) {
+				List<Document> ingredients = doc.getList("ingredients", Document.class);
+				if (ingredients != null) {
+					totalIngredients += ingredients.size();
+				}
+			}
+
+			num = (double) totalIngredients / totalRecipes;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return num;
 	}
 
