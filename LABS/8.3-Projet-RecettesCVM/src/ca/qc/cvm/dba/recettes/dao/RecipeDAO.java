@@ -43,7 +43,6 @@ public class RecipeDAO {
 			MongoDatabase database = MongoConnection.getConnection();
 			MongoCollection<Document> collection = database.getCollection("recipes");
 
-			// Check if a recipe with the same name exists
 			Document existingRecipe = collection.find(Filters.eq("name", recipe.getName())).first();
 
 			Document doc = new Document()
@@ -79,14 +78,30 @@ public class RecipeDAO {
 			}
 
 			if (existingRecipe != null) {
-				// Update the existing recipe
+				String oldPhotoKey = existingRecipe.getString("photoKey");
+				if (oldPhotoKey != null) {
+					Database berkeleyDb = BerkeleyConnection.getConnection();
+					DatabaseEntry oldKeyEntry = new DatabaseEntry(oldPhotoKey.getBytes(StandardCharsets.UTF_8));
+					berkeleyDb.delete(null, oldKeyEntry);
+				}
+
+				if (recipe.getImageData() != null) {
+					String newPhotoKey = UUID.randomUUID().toString();
+					Database berkeleyDb = BerkeleyConnection.getConnection();
+					DatabaseEntry newKeyEntry = new DatabaseEntry(newPhotoKey.getBytes(StandardCharsets.UTF_8));
+					DatabaseEntry newValueEntry = new DatabaseEntry(recipe.getImageData());
+
+					berkeleyDb.put(null, newKeyEntry, newValueEntry);
+					doc.append("photoKey", newPhotoKey);
+					recipe.setImageData(null);
+				}
+
 				UpdateResult result = collection.updateOne(
 						Filters.eq("_id", existingRecipe.getObjectId("_id")),
 						new Document("$set", doc)
 				);
 				success = (result.getModifiedCount() > 0);
 			} else {
-				// Insert new recipe
 				collection.insertOne(doc);
 				ObjectId generatedId = doc.getObjectId("_id");
 				recipe.setId(generatedId.toHexString());
@@ -370,6 +385,26 @@ public class RecipeDAO {
 	 */
 	public static long getPhotoCount() {
 		long num = 0;
+
+		try {
+			Database berkeleyDb = BerkeleyConnection.getConnection();
+			var environment = berkeleyDb.getEnvironment();
+			var txn = environment.beginTransaction(null, null);
+
+			try (var cursor = berkeleyDb.openCursor(txn, null)) {
+				DatabaseEntry keyEntry = new DatabaseEntry();
+				DatabaseEntry valueEntry = new DatabaseEntry();
+
+				while (cursor.getNext(keyEntry, valueEntry, null) == com.sleepycat.je.OperationStatus.SUCCESS) {
+					num++;
+				}
+			}
+
+			txn.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return num;
 	}
 
