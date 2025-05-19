@@ -415,7 +415,15 @@ public class RecipeDAO {
 	 */
 	public static long getRecipeCount() {
 		long num = 0;
-		
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+			num = collection.countDocuments();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return num;
 	}
 	
