@@ -1,9 +1,26 @@
 package ca.qc.cvm.dba.recettes.dao;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import ca.qc.cvm.dba.recettes.entity.Recipe;
+import com.mongodb.MongoWriteException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseEntry;
+import org.bson.types.ObjectId;
+import org.bson.Document;
+import com.mongodb.client.result.UpdateResult;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseEntry;
+import ca.qc.cvm.dba.recettes.entity.Ingredient;
 import ca.qc.cvm.dba.recettes.entity.Recipe;
 
 public class RecipeDAO {
@@ -21,7 +38,68 @@ public class RecipeDAO {
 	 */
 	public static boolean save(Recipe recipe) {
 		boolean success = false;
-		
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			if (collection.find(Filters.eq("name", recipe.getName())).first() != null) {
+				return false;
+			}
+
+			Document doc = new Document()
+					.append("name",      recipe.getName())
+					.append("portion",   recipe.getPortion())
+					.append("prepTime",  recipe.getPrepTime())
+					.append("cookTime",  recipe.getCookTime());
+
+			List<Document> ingredientDocs = new ArrayList<>();
+			if (recipe.getIngredients() != null) {
+				for (Ingredient ing : recipe.getIngredients()) {
+					Document ingDoc = new Document()
+							.append("name",     ing.getName())
+							.append("quantity", ing.getQuantity());
+					ingredientDocs.add(ingDoc);
+				}
+			}
+			doc.append("ingredients", ingredientDocs);
+
+			if (recipe.getSteps() != null) {
+				doc.append("steps", recipe.getSteps());
+			}
+
+			if (recipe.getImageData() != null) {
+				String photoKey = UUID.randomUUID().toString();
+				Database berkeleyDb = BerkeleyConnection.getConnection();
+				DatabaseEntry keyEntry   = new DatabaseEntry(photoKey.getBytes(StandardCharsets.UTF_8));
+				DatabaseEntry valueEntry = new DatabaseEntry(recipe.getImageData());
+
+				berkeleyDb.put(null, keyEntry, valueEntry);
+				doc.append("photoKey", photoKey);
+				recipe.setImageData(null);
+			}
+
+			if (recipe.getId() == null) {
+				collection.insertOne(doc);
+				ObjectId generatedId = doc.getObjectId("_id");
+				recipe.setId(generatedId.toHexString());
+				success = true;
+			} else {
+				UpdateResult result = collection.updateOne(
+						Filters.eq("_id", new ObjectId(recipe.getId())),
+						new Document("$set", doc)
+				);
+				success = (result.getModifiedCount() > 0);
+			}
+
+		} catch (MongoWriteException mwe) {
+			mwe.printStackTrace();
+			success = false;
+		} catch (Exception e) {
+			e.printStackTrace();
+			success = false;
+		}
+
 		return success;
 	}
 
