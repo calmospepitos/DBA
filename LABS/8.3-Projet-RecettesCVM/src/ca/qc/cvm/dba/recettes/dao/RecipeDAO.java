@@ -434,7 +434,48 @@ public class RecipeDAO {
 	 */
 	public static Recipe getLastAddedRecipe() {
 		Recipe recipe = null;
-		
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			Document lastRecipeDoc = collection.find()
+					.sort(new Document("_id", -1))
+					.limit(1)
+					.first();
+
+			if (lastRecipeDoc != null) {
+				recipe = new Recipe();
+				recipe.setId(lastRecipeDoc.getObjectId("_id").toHexString());
+				recipe.setName(lastRecipeDoc.getString("name"));
+				recipe.setPortion(lastRecipeDoc.getInteger("portion", 0));
+				recipe.setPrepTime(lastRecipeDoc.getInteger("prepTime", 0));
+				recipe.setCookTime(lastRecipeDoc.getInteger("cookTime", 0));
+				recipe.setSteps(lastRecipeDoc.getList("steps", String.class));
+
+				List<Document> ingredientDocs = lastRecipeDoc.getList("ingredients", Document.class);
+				List<Ingredient> ingredients = new ArrayList<>();
+				if (ingredientDocs != null) {
+					for (Document ingDoc : ingredientDocs) {
+						ingredients.add(new Ingredient(ingDoc.getString("quantity"), ingDoc.getString("name")));
+					}
+				}
+				recipe.setIngredients(ingredients);
+
+				String photoKey = lastRecipeDoc.getString("photoKey");
+				if (photoKey != null) {
+					Database berkeleyDb = BerkeleyConnection.getConnection();
+					DatabaseEntry keyEntry = new DatabaseEntry(photoKey.getBytes(StandardCharsets.UTF_8));
+					DatabaseEntry valueEntry = new DatabaseEntry();
+					if (berkeleyDb.get(null, keyEntry, valueEntry, null) == com.sleepycat.je.OperationStatus.SUCCESS) {
+						recipe.setImageData(valueEntry.getData());
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return recipe;
 	}
 	
