@@ -9,19 +9,13 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseEntry;
 import org.bson.types.ObjectId;
 import org.bson.Document;
 import com.mongodb.client.result.UpdateResult;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseEntry;
 import ca.qc.cvm.dba.recettes.entity.Ingredient;
-import ca.qc.cvm.dba.recettes.entity.Recipe;
 
 public class RecipeDAO {
 
