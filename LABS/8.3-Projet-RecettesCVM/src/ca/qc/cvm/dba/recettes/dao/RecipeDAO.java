@@ -43,21 +43,20 @@ public class RecipeDAO {
 			MongoDatabase database = MongoConnection.getConnection();
 			MongoCollection<Document> collection = database.getCollection("recipes");
 
-			if (collection.find(Filters.eq("name", recipe.getName())).first() != null) {
-				return false;
-			}
+			// Check if a recipe with the same name exists
+			Document existingRecipe = collection.find(Filters.eq("name", recipe.getName())).first();
 
 			Document doc = new Document()
-					.append("name",      recipe.getName())
-					.append("portion",   recipe.getPortion())
-					.append("prepTime",  recipe.getPrepTime())
-					.append("cookTime",  recipe.getCookTime());
+					.append("name", recipe.getName())
+					.append("portion", recipe.getPortion())
+					.append("prepTime", recipe.getPrepTime())
+					.append("cookTime", recipe.getCookTime());
 
 			List<Document> ingredientDocs = new ArrayList<>();
 			if (recipe.getIngredients() != null) {
 				for (Ingredient ing : recipe.getIngredients()) {
 					Document ingDoc = new Document()
-							.append("name",     ing.getName())
+							.append("name", ing.getName())
 							.append("quantity", ing.getQuantity());
 					ingredientDocs.add(ingDoc);
 				}
@@ -71,7 +70,7 @@ public class RecipeDAO {
 			if (recipe.getImageData() != null) {
 				String photoKey = UUID.randomUUID().toString();
 				Database berkeleyDb = BerkeleyConnection.getConnection();
-				DatabaseEntry keyEntry   = new DatabaseEntry(photoKey.getBytes(StandardCharsets.UTF_8));
+				DatabaseEntry keyEntry = new DatabaseEntry(photoKey.getBytes(StandardCharsets.UTF_8));
 				DatabaseEntry valueEntry = new DatabaseEntry(recipe.getImageData());
 
 				berkeleyDb.put(null, keyEntry, valueEntry);
@@ -79,17 +78,19 @@ public class RecipeDAO {
 				recipe.setImageData(null);
 			}
 
-			if (recipe.getId() == null) {
+			if (existingRecipe != null) {
+				// Update the existing recipe
+				UpdateResult result = collection.updateOne(
+						Filters.eq("_id", existingRecipe.getObjectId("_id")),
+						new Document("$set", doc)
+				);
+				success = (result.getModifiedCount() > 0);
+			} else {
+				// Insert new recipe
 				collection.insertOne(doc);
 				ObjectId generatedId = doc.getObjectId("_id");
 				recipe.setId(generatedId.toHexString());
 				success = true;
-			} else {
-				UpdateResult result = collection.updateOne(
-						Filters.eq("_id", new ObjectId(recipe.getId())),
-						new Document("$set", doc)
-				);
-				success = (result.getModifiedCount() > 0);
 			}
 
 		} catch (MongoWriteException mwe) {
@@ -341,7 +342,24 @@ public class RecipeDAO {
 	 */
 	public static long getMaxRecipeTime() {
 		long num = 0;
-		
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			for (Document doc : collection.find()) {
+				int prepTime = doc.getInteger("prepTime", 0);
+				int cookTime = doc.getInteger("cookTime", 0);
+				long totalTime = prepTime + cookTime;
+
+				if (totalTime > num) {
+					num = totalTime;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return num;
 	}
 	
