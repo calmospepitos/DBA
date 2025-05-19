@@ -118,8 +118,59 @@ public class RecipeDAO {
 	 * @return la liste des recettes, selon le filtre si nécessaire
 	 */
 	public static List<Recipe> getRecipeList(String filter, int limit) {
-		List<Recipe> recipeList = new ArrayList<Recipe>();
-		
+		List<Recipe> recipeList = new ArrayList<>();
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			List<Document> documents;
+			if (filter != null && !filter.isEmpty()) {
+				documents = collection.find(Filters.regex("name", "^" + filter, "i"))
+						.sort(new Document("name", 1))
+						.limit(limit)
+						.into(new ArrayList<>());
+			} else {
+				documents = collection.find()
+						.sort(new Document("name", 1))
+						.limit(limit)
+						.into(new ArrayList<>());
+			}
+
+			for (Document doc : documents) {
+				Recipe recipe = new Recipe();
+				recipe.setId(doc.getObjectId("_id").toHexString());
+				recipe.setName(doc.getString("name"));
+				recipe.setPortion(doc.getInteger("portion", 0));
+				recipe.setPrepTime(doc.getInteger("prepTime", 0));
+				recipe.setCookTime(doc.getInteger("cookTime", 0));
+				recipe.setSteps(doc.getList("steps", String.class));
+
+				List<Document> ingredientDocs = doc.getList("ingredients", Document.class);
+				List<Ingredient> ingredients = new ArrayList<>();
+				if (ingredientDocs != null) {
+					for (Document ingDoc : ingredientDocs) {
+						ingredients.add(new Ingredient(ingDoc.getString("quantity"), ingDoc.getString("name")));
+					}
+				}
+				recipe.setIngredients(ingredients);
+
+				String photoKey = doc.getString("photoKey");
+				if (photoKey != null) {
+					Database berkeleyDb = BerkeleyConnection.getConnection();
+					DatabaseEntry keyEntry = new DatabaseEntry(photoKey.getBytes(StandardCharsets.UTF_8));
+					DatabaseEntry valueEntry = new DatabaseEntry();
+					if (berkeleyDb.get(null, keyEntry, valueEntry, null) == com.sleepycat.je.OperationStatus.SUCCESS) {
+						recipe.setImageData(valueEntry.getData());
+					}
+				}
+
+				recipeList.add(recipe);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return recipeList;
 	}
 
@@ -131,7 +182,30 @@ public class RecipeDAO {
 	 */
 	public static boolean delete(Recipe recipe) {
 		boolean success = false;
-				
+
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+
+			// Find the recipe document by ID
+			Document recipeDoc = collection.find(Filters.eq("_id", new ObjectId(recipe.getId()))).first();
+			if (recipeDoc != null) {
+				// Delete the associated image from BerkeleyDB if photoKey exists
+				String photoKey = recipeDoc.getString("photoKey");
+				if (photoKey != null) {
+					Database berkeleyDb = BerkeleyConnection.getConnection();
+					DatabaseEntry keyEntry = new DatabaseEntry(photoKey.getBytes(StandardCharsets.UTF_8));
+					berkeleyDb.delete(null, keyEntry);
+				}
+
+				// Delete the recipe document from MongoDB
+				collection.deleteOne(Filters.eq("_id", new ObjectId(recipe.getId())));
+				success = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return success;
 	}
 	
