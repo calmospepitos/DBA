@@ -187,10 +187,8 @@ public class RecipeDAO {
 			MongoDatabase database = MongoConnection.getConnection();
 			MongoCollection<Document> collection = database.getCollection("recipes");
 
-			// Find the recipe document by ID
 			Document recipeDoc = collection.find(Filters.eq("_id", new ObjectId(recipe.getId()))).first();
 			if (recipeDoc != null) {
-				// Delete the associated image from BerkeleyDB if photoKey exists
 				String photoKey = recipeDoc.getString("photoKey");
 				if (photoKey != null) {
 					Database berkeleyDb = BerkeleyConnection.getConnection();
@@ -198,7 +196,6 @@ public class RecipeDAO {
 					berkeleyDb.delete(null, keyEntry);
 				}
 
-				// Delete the recipe document from MongoDB
 				collection.deleteOne(Filters.eq("_id", new ObjectId(recipe.getId())));
 				success = true;
 			}
@@ -211,15 +208,40 @@ public class RecipeDAO {
 	
 	/**
 	 * Suppression totale de toutes les données du système!
-	 * 
+	 *
 	 * @return true si succès, false sinon
 	 */
 	public static boolean deleteAll() {
 		boolean success = false;
 
+		try {
+			MongoDatabase database = MongoConnection.getConnection();
+			MongoCollection<Document> collection = database.getCollection("recipes");
+			collection.deleteMany(new Document());
+
+			Database berkeleyDb = BerkeleyConnection.getConnection();
+			var environment = berkeleyDb.getEnvironment();
+			var txn = environment.beginTransaction(null, null);
+
+			try (var cursor = berkeleyDb.openCursor(txn, null)) {
+				DatabaseEntry keyEntry = new DatabaseEntry();
+				DatabaseEntry valueEntry = new DatabaseEntry();
+				while (cursor.getNext(keyEntry, valueEntry, null) ==
+						com.sleepycat.je.OperationStatus.SUCCESS) {
+					cursor.delete(); // Delete the current entry
+				}
+			}
+
+			txn.commit();
+
+			success = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		return success;
 	}
-	
+
 	/**
 	 * Permet de retourner le nombre d'ingrédients en moyenne dans une recette
 	 * 
